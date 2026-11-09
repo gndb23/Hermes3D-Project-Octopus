@@ -23,7 +23,7 @@ import sys
 PRODUCT_CONFIGS = {
     "padded_bubble_mailer": {
         "title": "Heavy-Duty Padded Bubble Mailer",
-        "category_dir": "02_Polymailers/Padded_Bubble_Mailers",
+        "category_dir": "03_Bubble_Wrap_Cushioning/Padded_Bubble_Mailers",
         "material_specs": "12-Micron co-extruded virgin PE outer layer with high-density plump air bubble cushioning film",
         "flap_spec": "+4 cm flap with destructive hot-melt tamper-evident adhesive strip and anti-static liner",
         "border_spec": "10mm heat-pressed explosion-proof borders on both sides (usable inner width = W - 20mm)",

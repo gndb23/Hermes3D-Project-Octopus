@@ -125,11 +125,13 @@ Everflow Supplies/
     │       │           ├── 07_All_Available_Size_Colour.jpg
     │       │           └── 08_Real_Product_Display.jpg
     │       ├── 02_Polymailers/
-    │       │   ├── Padded_Bubble_Mailers/
     │       │   └── Standard_Polymailers/
     │       ├── 03_Bubble_Wrap_Cushioning/
-    │       ├── 04_Tapes_and_Labels/
-    │       └── 05_Stretch_Film/
+    │       │   └── Padded_Bubble_Mailers/
+    │       ├── 04_Thermal_Receipt/
+    │       ├── 05_Stretch_Film/
+    │       └── 06_Thermal_Sticker/
+    │           └── Thermal_Labels/
     │
     ├── 02_Website_Photos/                (Official Shopify web assets)
     │   ├── Categories/
