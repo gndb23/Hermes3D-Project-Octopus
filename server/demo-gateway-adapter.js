@@ -10,35 +10,166 @@ const MODELS = [{ id: "demo/mock-office", name: "Mock Office", provider: "demo" 
 
 const agents = new Map([
   [
-    "demo-orchestrator",
+    "everflow-supervisor",
     {
-      id: "demo-orchestrator",
-      name: "Avery",
-      role: "Orchestrator",
-      workspace: "/demo/orchestrator",
+      id: "everflow-supervisor",
+      name: "0. The Supervisor (Router)",
+      role: "Orchestration • Webhook Triage & LangGraph Router",
+      workspace: "/everflow/supervisor",
     },
   ],
   [
-    "demo-researcher",
+    "everflow-cx",
     {
-      id: "demo-researcher",
-      name: "Mika",
-      role: "Research",
-      workspace: "/demo/research",
+      id: "everflow-cx",
+      name: "1. CX Chatbot",
+      role: "Front-Office • Shopee/Lazada/TikTok/Shopify CX",
+      workspace: "/everflow/cx-chatbot",
     },
   ],
   [
-    "demo-builder",
+    "everflow-inventory",
     {
-      id: "demo-builder",
-      name: "Rune",
-      role: "Builder",
-      workspace: "/demo/builder",
+      id: "everflow-inventory",
+      name: "2. Inventory Controller",
+      role: "Mid-Office • 4-Platform Stock Sync & 3PL CBM",
+      workspace: "/everflow/inventory-controller",
+    },
+  ],
+  [
+    "everflow-sourcing",
+    {
+      id: "everflow-sourcing",
+      name: "3. Sourcing & Margin Analyst",
+      role: "Back-Office • 1688 Landed Cost & 9% GST Analyst",
+      workspace: "/everflow/sourcing-analyst",
+    },
+  ],
+  [
+    "everflow-marketing",
+    {
+      id: "everflow-marketing",
+      name: "4. Marketing Creative",
+      role: "Front-Office • Listing Copy & ComfyUI (#00357a)",
+      workspace: "/everflow/marketing-creative",
+    },
+  ],
+  [
+    "everflow-social",
+    {
+      id: "everflow-social",
+      name: "5. Social Media Specialist",
+      role: "Front-Office • Daily Social Posts, Photo HITL & Gemini Argon",
+      workspace: "/everflow/social-media",
     },
   ],
 ]);
 
 const files = new Map();
+const demoTasks = new Map([
+  [
+    "task-1",
+    {
+      id: "task-1",
+      title: "Triage incoming Shopee/Lazada/TikTok/Shopify webhooks via LangGraph",
+      description:
+        "Ingest omnichannel JSON payloads, filter API noise, and route strictly to route_to_cx, route_to_inventory, route_to_sourcing, or route_to_marketing.",
+      status: "working",
+      source: "hermes_event",
+      assignedAgentId: "everflow-supervisor",
+      createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
+      updatedAt: new Date(Date.now() - 900000).toISOString(),
+      channel: "n8n",
+      notes: ["Phase 2 Pydantic SupervisorRouteSchema & prompt injection guards active."],
+      archived: false,
+    },
+  ],
+  [
+    "task-2",
+    {
+      id: "task-2",
+      title: "Answer omnichannel FAQs: Polymailer sizing & A6 Thermal Label compatibility",
+      description:
+        "Reply to Shopee/Lazada/TikTok/Shopify buyers on 60-micron polymailer sizes (17x29 to 40x55cm) and Zebra/HPRT/Xprinter A6 waybill compatibility.",
+      status: "working",
+      source: "playbook",
+      assignedAgentId: "everflow-cx",
+      createdAt: new Date(Date.now() - 3600000 * 4).toISOString(),
+      updatedAt: new Date(Date.now() - 1200000).toISOString(),
+      channel: "shopee",
+      notes: ["Auto-escalates refund claims > $50 SGD to Telegram HITL."],
+      archived: false,
+    },
+  ],
+  [
+    "task-3",
+    {
+      id: "task-3",
+      title: "Monitor 4-platform stock & forecast 3PL CBM capacity (Locad/uParcel)",
+      description:
+        "Check safety thresholds for White Polymailers (25x35cm), Kraft Bubble Mailers (#0), and OPP Tape; alert Telegram when stock drops below threshold.",
+      status: "scheduled",
+      source: "hermes_event",
+      assignedAgentId: "everflow-inventory",
+      createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
+      updatedAt: new Date(Date.now() - 1800000).toISOString(),
+      channel: "shopify",
+      notes: ["SKU bubble_mailer_kraft_#0 flagged at 180 pcs (0.144 CBM restock needed)."],
+      archived: false,
+    },
+  ],
+  [
+    "task-4",
+    {
+      id: "task-4",
+      title: "Approve 1688 White Polymailer 25x35cm Landed Cost Model (Telegram HITL)",
+      description:
+        "Factory ¥0.16 RMB -> Landed $0.0609 SGD/pc (incl. Sea Freight + 9% SG GST) -> 39.4% Shopee Net Margin. Awaiting Telegram HITL approval.",
+      status: "needs_attention",
+      source: "hermes_event",
+      assignedAgentId: "everflow-sourcing",
+      createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+      updatedAt: new Date(Date.now() - 600000).toISOString(),
+      channel: "telegram",
+      notes: ["Connected to @Everflow_Supplies_Bot for 1-tap Approve/Reject."],
+      archived: false,
+    },
+  ],
+  [
+    "task-5",
+    {
+      id: "task-5",
+      title: "Generate ComfyUI ad banner & Shopee listing copy (#00357a Navy & Montserrat)",
+      description:
+        "Create high-converting listing copy and ComfyUI banner prompts strictly formatted to Everflow brand guidelines (Dark Navy #00357a, White #ffffff, Montserrat).",
+      status: "done",
+      source: "hermes3d_manual",
+      assignedAgentId: "everflow-marketing",
+      createdAt: new Date(Date.now() - 3600000 * 6).toISOString(),
+      updatedAt: new Date(Date.now() - 3600000 * 1).toISOString(),
+      channel: "tiktok",
+      notes: ["Brand compliance check passed (100% Golden Eval Suite)."],
+      archived: false,
+    },
+  ],
+  [
+    "task-6",
+    {
+      id: "task-6",
+      title: "Draft daily packaging demo post & dispatch photo to Telegram for Alvin's approval",
+      description:
+        "Generate daily social media creative, send photo to Telegram (@Everflow_Supplies_Bot), capture comments for Gemini Argon revisions, and queue approved posts.",
+      status: "working",
+      source: "hermes_event",
+      assignedAgentId: "everflow-social",
+      createdAt: new Date(Date.now() - 3600000 * 1).toISOString(),
+      updatedAt: new Date(Date.now() - 300000).toISOString(),
+      channel: "telegram",
+      notes: ["Telegram Photo HITL Gate & Gemini Argon revision engine active."],
+      archived: false,
+    },
+  ],
+]);
 const sessionSettings = new Map();
 const conversationHistory = new Map();
 const activeRuns = new Map();
@@ -92,27 +223,25 @@ function agentListPayload() {
 function buildDemoReply(agent, message) {
   const normalized = message.trim();
   const compactMessage = normalized.replace(/\s+/g, " ").trim();
-  const greetingOnly = /^(hi|hello|hey|yo|sup|what'?s up|how are you)[!.? ]*$/i.test(compactMessage);
-  const opening =
-    agent.role === "Orchestrator"
-      ? `${agent.name} here. Demo office is live and the team is synced.`
-      : `${agent.name} checking in from the ${agent.role.toLowerCase()} desk.`;
-  if (greetingOnly) {
-    return agent.role === "Orchestrator"
-      ? `${opening} I can coordinate the room, sketch a plan, or hand work to Research and Builder.`
-      : `${opening} Give me a concrete task and I will respond in-character with a focused next step.`;
+  if (agent.id === "everflow-supervisor") {
+    return `[Agent 0 • The Supervisor] Ingested: "${compactMessage}". Analyzing payload intent and routing to specialist Minion desks: CX, Inventory, Sourcing, Marketing, or Social Media.`;
   }
-  const focusLine =
-    compactMessage.length > 160
-      ? `${compactMessage.slice(0, 160).trimEnd()}...`
-      : compactMessage;
-  const action =
-    agent.role === "Research"
-      ? "I would turn this into source checks, constraints, and follow-up questions."
-      : agent.role === "Builder"
-        ? "I would translate this into implementation steps, edge cases, and validation."
-        : "I would route the work, keep the team aligned, and summarize the next move.";
-  return `${opening} Focus: ${focusLine}. ${action}`;
+  if (agent.id === "everflow-cx") {
+    return `[Agent 1 • CX Chatbot] Omnichannel desk ready (Shopee, Lazada, TikTok Shop, Shopify). For "${compactMessage}": 60-micron polymailers and A6 thermal labels are fully stocked!`;
+  }
+  if (agent.id === "everflow-inventory") {
+    return `[Agent 2 • Inventory Controller] Stock synced across 4 platforms. Forecasting 3PL CBM capacity with Locad/uParcel for: "${compactMessage}".`;
+  }
+  if (agent.id === "everflow-sourcing") {
+    return `[Agent 3 • Sourcing Analyst] Calculating 1688 landed cost unit economics: (Factory RMB ÷ 5.20) + CBM Sea Freight + 9% SG GST. Will request Telegram approval before supplier outreach!`;
+  }
+  if (agent.id === "everflow-marketing") {
+    return `[Agent 4 • Marketing Creative] Generating high-converting listing copy and ComfyUI ad banner prompts (#00357a Navy & Montserrat) for: "${compactMessage}".`;
+  }
+  if (agent.id === "everflow-social") {
+    return `[Agent 5 • Social Media Specialist] Mel here! Generating daily social media content for: "${compactMessage}". Sending creative photo to @Everflow_Supplies_Bot on Telegram for Alvin's approval, with Gemini Argon on low complex for instant revisions!`;
+  }
+  return `${agent.name} checking in from ${agent.role}. Focus: ${compactMessage}.`;
 }
 
 async function handleMethod(method, params, id, sendEvent) {
@@ -120,7 +249,7 @@ async function handleMethod(method, params, id, sendEvent) {
 
   switch (method) {
     case "agents.list":
-      return resOk(id, { defaultId: "demo-orchestrator", mainKey: MAIN_KEY, agents: agentListPayload() });
+      return resOk(id, { defaultId: "everflow-supervisor", mainKey: MAIN_KEY, agents: agentListPayload() });
 
     case "agents.create": {
       const name = typeof p.name === "string" && p.name.trim() ? p.name.trim() : "Demo Agent";
@@ -152,7 +281,7 @@ async function handleMethod(method, params, id, sendEvent) {
 
     case "agents.delete": {
       const agentId = typeof p.agentId === "string" ? p.agentId.trim() : "";
-      if (agentId && agents.has(agentId) && agentId !== "demo-orchestrator") {
+      if (agentId && agents.has(agentId) && agentId !== "everflow-supervisor") {
         agents.delete(agentId);
         clearHistory(sessionKeyFor(agentId));
       }
@@ -160,13 +289,13 @@ async function handleMethod(method, params, id, sendEvent) {
     }
 
     case "agents.files.get": {
-      const key = `${p.agentId || "demo-orchestrator"}/${p.name || ""}`;
+      const key = `${p.agentId || "everflow-supervisor"}/${p.name || ""}`;
       const content = files.get(key);
       return resOk(id, { file: content !== undefined ? { content } : { missing: true } });
     }
 
     case "agents.files.set": {
-      const key = `${p.agentId || "demo-orchestrator"}/${p.name || ""}`;
+      const key = `${p.agentId || "everflow-supervisor"}/${p.name || ""}`;
       files.set(key, typeof p.content === "string" ? p.content : "");
       return resOk(id, {});
     }
@@ -201,7 +330,85 @@ async function handleMethod(method, params, id, sendEvent) {
       return resOk(id, { models: MODELS });
 
     case "skills.status":
-      return resOk(id, { skills: [{ name: "TASK-MANAGER", status: "installed", version: "1.0.0" }] });
+      return resOk(id, {
+        workspaceDir: "/demo/workspace",
+        managedSkillsDir: "/demo/skills",
+        skills: [
+          {
+            name: "task-manager",
+            skillKey: "task-manager",
+            description: "Maintain a shared workspace TODO list and kanban task board.",
+            source: "hermes-workspace",
+            bundled: true,
+            filePath: "/demo/skills/task-manager/SKILL.md",
+            baseDir: "/demo/skills/task-manager",
+            always: true,
+            disabled: false,
+            blockedByAllowlist: false,
+            eligible: true,
+            requirements: { bins: [], anyBins: [], env: [], config: [], os: [] },
+            missing: { bins: [], anyBins: [], env: [], config: [], os: [] },
+            configChecks: [],
+            install: [],
+          },
+        ],
+      });
+
+    case "skills.install":
+    case "skills.update":
+    case "skills.bins.install":
+      return resOk(id, { ok: true, name: "task-manager" });
+
+    case "tasks.list": {
+      const includeArchived = Boolean(p.includeArchived);
+      const list = [...demoTasks.values()].filter(
+        (t) => includeArchived || !t.archived,
+      );
+      return resOk(id, { tasks: list });
+    }
+
+    case "tasks.create": {
+      const taskId = "task-" + randomId().slice(0, 8);
+      const now = new Date().toISOString();
+      const newTask = {
+        id: taskId,
+        title: p.title || "Untitled task",
+        description: p.description || "",
+        status: p.status || "inbox",
+        source: p.source || "hermes3d_manual",
+        assignedAgentId: p.assignedAgentId || null,
+        createdAt: now,
+        updatedAt: now,
+        channel: p.channel || "office",
+        notes: Array.isArray(p.notes) ? p.notes : [],
+        archived: false,
+      };
+      demoTasks.set(taskId, newTask);
+      return resOk(id, newTask);
+    }
+
+    case "tasks.update": {
+      const taskId = p.id;
+      const existing = demoTasks.get(taskId) || {
+        id: taskId,
+        title: p.title || "Task",
+        status: "inbox",
+        createdAt: new Date().toISOString(),
+      };
+      const updated = {
+        ...existing,
+        ...p,
+        updatedAt: new Date().toISOString(),
+      };
+      demoTasks.set(taskId, updated);
+      return resOk(id, updated);
+    }
+
+    case "tasks.delete": {
+      const taskId = p.id;
+      demoTasks.delete(taskId);
+      return resOk(id, { ok: true, removed: true });
+    }
 
     case "cron.list":
       return resOk(id, { jobs: [] });
@@ -247,7 +454,7 @@ async function handleMethod(method, params, id, sendEvent) {
     }
 
     case "sessions.patch": {
-      const key = typeof p.key === "string" ? p.key : sessionKeyFor("demo-orchestrator");
+      const key = typeof p.key === "string" ? p.key : sessionKeyFor("everflow-supervisor");
       const current = sessionSettings.get(key) || {};
       const next = { ...current };
       if (p.model !== undefined) next.model = p.model;
@@ -262,15 +469,15 @@ async function handleMethod(method, params, id, sendEvent) {
     }
 
     case "sessions.reset": {
-      const key = typeof p.key === "string" ? p.key : sessionKeyFor("demo-orchestrator");
+      const key = typeof p.key === "string" ? p.key : sessionKeyFor("everflow-supervisor");
       clearHistory(key);
       return resOk(id, { ok: true });
     }
 
     case "chat.send": {
-      const sessionKey = typeof p.sessionKey === "string" ? p.sessionKey : sessionKeyFor("demo-orchestrator");
-      const agentId = sessionKey.startsWith("agent:") ? sessionKey.split(":")[1] : "demo-orchestrator";
-      const agent = agents.get(agentId) || agents.get("demo-orchestrator");
+      const sessionKey = typeof p.sessionKey === "string" ? p.sessionKey : sessionKeyFor("everflow-supervisor");
+      const agentId = sessionKey.startsWith("agent:") ? sessionKey.split(":")[1] : "everflow-supervisor";
+      const agent = agents.get(agentId) || agents.get("everflow-supervisor");
       const message = typeof p.message === "string" ? p.message.trim() : String(p.message || "").trim();
       const runId = typeof p.idempotencyKey === "string" && p.idempotencyKey ? p.idempotencyKey : randomId();
       if (!message) return resOk(id, { status: "no-op", runId });
@@ -358,7 +565,7 @@ async function handleMethod(method, params, id, sendEvent) {
     }
 
     case "chat.history": {
-      const sessionKey = typeof p.sessionKey === "string" ? p.sessionKey : sessionKeyFor("demo-orchestrator");
+      const sessionKey = typeof p.sessionKey === "string" ? p.sessionKey : sessionKeyFor("everflow-supervisor");
       return resOk(id, { sessionKey, messages: getHistory(sessionKey) });
     }
 
@@ -479,9 +686,9 @@ function startAdapter() {
                 agents: [...agents.values()].map((agent) => ({
                   agentId: agent.id,
                   name: agent.name,
-                  isDefault: agent.id === "demo-orchestrator",
+                  isDefault: agent.id === "everflow-supervisor",
                 })),
-                defaultAgentId: "demo-orchestrator",
+                defaultAgentId: "everflow-supervisor",
               },
               sessionDefaults: { mainKey: MAIN_KEY },
             },

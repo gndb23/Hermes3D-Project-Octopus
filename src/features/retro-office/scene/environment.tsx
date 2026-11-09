@@ -209,18 +209,18 @@ function PerimeterWall({
       <mesh position={[0, wallHeight / 2, 0]} castShadow receiveShadow>
         <boxGeometry args={dims(length, wallHeight, thickness)} />
         <meshStandardMaterial
-          color="#e9dfd0"
+          color="#f4eee4"
           map={plaster.map}
           roughnessMap={plaster.roughnessMap}
           normalMap={plaster.normalMap}
-          normalScale={[0.5, 0.5]}
+          normalScale={[0.3, 0.3]}
           roughness={0.92}
           metalness={0.02}
         />
       </mesh>
       <mesh position={[0, wallHeight + capHeight / 2, 0]} castShadow>
         <boxGeometry args={dims(length, capHeight, thickness)} />
-        <meshStandardMaterial color="#2b2f33" roughness={0.42} metalness={0.68} />
+        <meshStandardMaterial color="#424a52" roughness={0.42} metalness={0.68} />
       </mesh>
     </group>
   );
@@ -331,7 +331,7 @@ export const FloorAndWalls = memo(function FloorAndWalls({
           map={districtConcrete.map}
           roughnessMap={districtConcrete.roughnessMap}
           normalMap={districtConcrete.normalMap}
-          normalScale={[0.6, 0.6]}
+          normalScale={[0.35, 0.35]}
           roughness={0.98}
           metalness={0.02}
         />
@@ -348,7 +348,7 @@ export const FloorAndWalls = memo(function FloorAndWalls({
           map={districtConcrete.map}
           roughnessMap={districtConcrete.roughnessMap}
           normalMap={districtConcrete.normalMap}
-          normalScale={[0.6, 0.6]}
+          normalScale={[0.35, 0.35]}
           roughness={0.96}
           metalness={0.04}
         />
@@ -361,13 +361,13 @@ export const FloorAndWalls = memo(function FloorAndWalls({
       >
         <planeGeometry args={[localOfficeWidth, localOfficeHeight, 22, 14]} />
         <meshPhysicalMaterial
-          color="#e8d5b8"
+          color="#f0e2cc"
           map={woodFloor.map}
           roughnessMap={woodFloor.roughnessMap}
           normalMap={woodFloor.normalMap}
-          normalScale={[0.6, 0.6]}
-          clearcoat={0.2}
-          clearcoatRoughness={0.6}
+          normalScale={[0.35, 0.35]}
+          clearcoat={0.3}
+          clearcoatRoughness={0.45}
           metalness={0.02}
         />
       </mesh>
@@ -381,13 +381,13 @@ export const FloorAndWalls = memo(function FloorAndWalls({
           >
             <planeGeometry args={[localOfficeWidth, localOfficeHeight, 22, 14]} />
             <meshPhysicalMaterial
-              color="#e8d5b8"
+              color="#f0e2cc"
               map={woodFloor.map}
               roughnessMap={woodFloor.roughnessMap}
               normalMap={woodFloor.normalMap}
-              normalScale={[0.6, 0.6]}
-              clearcoat={0.2}
-              clearcoatRoughness={0.6}
+              normalScale={[0.35, 0.35]}
+              clearcoat={0.3}
+              clearcoatRoughness={0.45}
               metalness={0.02}
             />
           </mesh>
@@ -430,7 +430,7 @@ export const FloorAndWalls = memo(function FloorAndWalls({
               map={pathConcrete.map}
               roughnessMap={pathConcrete.roughnessMap}
               normalMap={pathConcrete.normalMap}
-              normalScale={[0.5, 0.5]}
+              normalScale={[0.3, 0.3]}
               roughness={0.94}
               metalness={0.02}
             />
@@ -524,7 +524,7 @@ export const FloorAndWalls = memo(function FloorAndWalls({
               map={gymRubber.map}
               roughnessMap={gymRubber.roughnessMap}
               normalMap={gymRubber.normalMap}
-              normalScale={[0.5, 0.5]}
+              normalScale={[0.3, 0.3]}
               roughness={0.98}
               metalness={0.02}
             />
@@ -541,7 +541,7 @@ export const FloorAndWalls = memo(function FloorAndWalls({
                 map={gymRubber.map}
                 roughnessMap={gymRubber.roughnessMap}
                 normalMap={gymRubber.normalMap}
-                normalScale={[0.5, 0.5]}
+                normalScale={[0.3, 0.3]}
                 roughness={0.98}
                 metalness={0.02}
               />

@@ -49,8 +49,8 @@ const SHADOW_EXTENT = Math.max(WORLD_W, WORLD_H) * 0.72;
 const DAYLIGHT_DRIFT_PERIOD = 480;
 
 const SUN_BASE_POSITION = new THREE.Vector3(16, 24, 13);
-const SUN_WARM = new THREE.Color("#ffe3bd");
-const SUN_NEUTRAL = new THREE.Color("#fff4e4");
+const SUN_WARM = new THREE.Color("#ffe8cc");
+const SUN_NEUTRAL = new THREE.Color("#fff7ec");
 
 /** Deterministic hash so the exterior looks identical across sessions. */
 const hash1 = (n: number) => {
@@ -254,7 +254,7 @@ export function SceneAtmosphere({
   return (
     <>
       {/* Depth fog — pushes the far grounds into soft haze for scale. */}
-      <fog attach="fog" args={["#c3cedb", 58, 165]} />
+      <fog attach="fog" args={["#dee7f5", 65, 175]} />
 
       {/* Sky + image-based lighting from the bundled CC0 HDRI. */}
       <Suspense fallback={null}>
@@ -263,26 +263,26 @@ export function SceneAtmosphere({
           background
           backgroundBlurriness={0.04}
           backgroundIntensity={1}
-          environmentIntensity={0.55}
+          environmentIntensity={0.68}
           backgroundRotation={[0, Math.PI * 0.85, 0]}
           environmentRotation={[0, Math.PI * 0.85, 0]}
         />
       </Suspense>
 
       {/* Sky/ground bounce fill. */}
-      <hemisphereLight args={["#cfe0f4", "#8a6b4d", 0.38]} />
+      <hemisphereLight args={["#e8f0fe", "#e2d5c3", 0.58]} />
 
       {/* Warm key sun with tight, high-resolution soft shadows. */}
       <directionalLight
         ref={sunRef}
         position={SUN_BASE_POSITION.toArray()}
-        intensity={3.3}
-        color="#ffedd2"
+        intensity={3.1}
+        color="#fff4e6"
         castShadow
         shadow-mapSize={[config.shadowMapSize, config.shadowMapSize]}
         shadow-bias={-0.00015}
         shadow-normalBias={0.025}
-        shadow-radius={4}
+        shadow-radius={6}
         shadow-camera-left={-SHADOW_EXTENT}
         shadow-camera-right={SHADOW_EXTENT}
         shadow-camera-top={SHADOW_EXTENT}
@@ -292,7 +292,7 @@ export function SceneAtmosphere({
       />
 
       {/* Cool sky fill from the opposite side — lifts shadowed faces. */}
-      <directionalLight position={[-14, 12, -10]} intensity={0.55} color="#a7c4ef" />
+      <directionalLight position={[-14, 12, -10]} intensity={0.65} color="#b9d5fb" />
 
       {/* Concrete plaza apron directly around the building. */}
       <mesh
@@ -387,9 +387,9 @@ export function ScenePostFx({
             halfRes
             depthAwareUpsampling
             quality={config.aoQuality}
-            aoRadius={0.5}
-            distanceFalloff={0.8}
-            intensity={2.4}
+            aoRadius={0.42}
+            distanceFalloff={0.9}
+            intensity={1.35}
           />
         ) : (
           <></>
@@ -397,9 +397,9 @@ export function ScenePostFx({
         {config.bloom ? (
           <Bloom
             mipmapBlur
-            intensity={0.5}
-            luminanceThreshold={1.05}
-            luminanceSmoothing={0.25}
+            intensity={0.65}
+            luminanceThreshold={0.92}
+            luminanceSmoothing={0.35}
           />
         ) : (
           <></>
@@ -415,7 +415,7 @@ export function ScenePostFx({
         ) : (
           <></>
         )}
-        <Vignette eskil={false} offset={0.26} darkness={0.55} />
+        <Vignette eskil={false} offset={0.32} darkness={0.25} />
         <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
         {config.smaa ? <SMAA /> : <></>}
       </EffectComposer>

@@ -5787,12 +5787,12 @@ export function RetroOffice3D({
               near: 0.3,
               far: 320,
             }}
-            shadows={{ type: THREE.PCFShadowMap }}
+            shadows={{ type: THREE.PCFSoftShadowMap }}
             gl={{
               antialias: true,
               powerPreference: "high-performance",
               toneMapping: THREE.ACESFilmicToneMapping,
-              toneMappingExposure: 1.0,
+              toneMappingExposure: 1.05,
             }}
             style={{ width: "100%", height: "100%" }}
             onCreated={handleCanvasCreated}

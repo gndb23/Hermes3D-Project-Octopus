@@ -102,6 +102,10 @@ export const AgentModel = memo(function AgentModel({
   const rightEyeRef = useRef<THREE.Mesh>(null);
   const leftEyeHighlightRef = useRef<THREE.Mesh>(null);
   const rightEyeHighlightRef = useRef<THREE.Mesh>(null);
+  const leftEyeTwinkleRef = useRef<THREE.Mesh>(null);
+  const rightEyeTwinkleRef = useRef<THREE.Mesh>(null);
+  const leftCheekRef = useRef<THREE.Mesh>(null);
+  const rightCheekRef = useRef<THREE.Mesh>(null);
   const mouthRef = useRef<THREE.Mesh>(null);
   const leftMouthCornerRef = useRef<THREE.Mesh>(null);
   const rightMouthCornerRef = useRef<THREE.Mesh>(null);
@@ -193,6 +197,11 @@ export const AgentModel = memo(function AgentModel({
         ? Math.sin(frameValue * 0.03) * 0.01
         : 0;
     groupRef.current.position.y = bounce + breathe;
+    if (agent.state === "standing") {
+      groupRef.current.rotation.z = Math.sin(frameValue * 0.035) * 0.02;
+    } else if (agent.state !== "dancing") {
+      groupRef.current.rotation.z = 0;
+    }
 
     if (leftArmRef.current) {
       leftArmRef.current.rotation.x = 0;
@@ -432,10 +441,24 @@ export const AgentModel = memo(function AgentModel({
       highlightRef.current.visible = eyeOpen > 0.45 && !isAway;
       highlightRef.current.position.y = 0.482 + eyeOffsetY;
     }
+    for (const twinkleRef of [leftEyeTwinkleRef, rightEyeTwinkleRef]) {
+      if (!twinkleRef.current) continue;
+      twinkleRef.current.visible = eyeOpen > 0.45 && !isAway;
+      twinkleRef.current.position.y = 0.468 + eyeOffsetY;
+    }
+    for (const cheekRef of [leftCheekRef, rightCheekRef]) {
+      if (!cheekRef.current) continue;
+      cheekRef.current.position.y = 0.442 + (isAway ? -0.005 : 0);
+      const cheekPulse =
+        activeSpeechBubble || working
+          ? 0.95 + Math.sin(agent.frame * 0.12) * 0.1
+          : 1;
+      cheekRef.current.scale.set(cheekPulse, cheekPulse, 1);
+    }
 
     if (mouthRef.current) {
       mouthRef.current.rotation.z = 0;
-      mouthRef.current.position.set(0, 0.436, 0.074);
+      mouthRef.current.position.set(0, 0.432, 0.082);
       if (isAway) {
         mouthRef.current.scale.set(0.5, 0.12, 1);
         mouthRef.current.position.y = 0.434;
@@ -462,8 +485,8 @@ export const AgentModel = memo(function AgentModel({
       leftMouthCornerRef.current.visible = showSmileCorners || showFrownCorners;
       rightMouthCornerRef.current.visible =
         showSmileCorners || showFrownCorners;
-      leftMouthCornerRef.current.position.set(-0.031, 0.434, 0.074);
-      rightMouthCornerRef.current.position.set(0.031, 0.434, 0.074);
+      leftMouthCornerRef.current.position.set(-0.026, 0.436, 0.082);
+      rightMouthCornerRef.current.position.set(0.026, 0.436, 0.082);
       if (showFrownCorners) {
         leftMouthCornerRef.current.rotation.z = -0.6;
         rightMouthCornerRef.current.rotation.z = 0.6;
@@ -603,11 +626,18 @@ export const AgentModel = memo(function AgentModel({
     }
   });
 
-  const skin = resolvedAppearance.body.skinTone;
-  const topColor = resolvedAppearance.clothing.topColor;
-  const trouserColor = resolvedAppearance.clothing.bottomColor;
-  const shoeColor = resolvedAppearance.clothing.shoesColor;
-  const hairColor = resolvedAppearance.hair.color;
+  // Disney / Pixar Minion Theme
+  const MINION_YELLOW = "#facc15";
+  const MINION_DENIM = "#2563eb";
+  const MINION_DENIM_DARK = "#1d4ed8";
+  const MINION_GLOVE = "#18181b";
+  const MINION_BOOT = "#18181b";
+
+  const skin = MINION_YELLOW;
+  const topColor = MINION_YELLOW;
+  const trouserColor = MINION_DENIM;
+  const shoeColor = MINION_BOOT;
+  const hairColor = "#18181b";
   const hairStyle = resolvedAppearance.hair.style;
   const topStyle = resolvedAppearance.clothing.topStyle;
   const bottomStyle = resolvedAppearance.clothing.bottomStyle;
@@ -616,10 +646,16 @@ export const AgentModel = memo(function AgentModel({
   const showHeadset = resolvedAppearance.accessories.headset;
   const showBackpack = resolvedAppearance.accessories.backpack;
   const accessoryColor = topColor;
-  const sleeveColor = topStyle === "jacket" ? "#dbe4ff" : topColor;
-  const cuffColor = topStyle === "hoodie" ? "#d1d5db" : sleeveColor;
-  // Jacket accent brightened ~10% so it doesn't turn muddy under ACES tone mapping.
-  const topAccentColor = topStyle === "jacket" ? "#2a3648" : cuffColor;
+  const sleeveColor = MINION_YELLOW;
+  const cuffColor = MINION_GLOVE;
+  const topAccentColor = MINION_DENIM_DARK;
+
+  // Authentic Minion variety: 1 in 3 is a 1-eyed Minion (like Stuart), others are 2-eyed (like Kevin & Bob)
+  const isOneEyed = useMemo(() => {
+    let hash = 0;
+    for (let i = 0; i < agentId.length; i++) hash = (hash * 31 + agentId.charCodeAt(i)) | 0;
+    return Math.abs(hash) % 3 === 0;
+  }, [agentId]);
 
   const faceTexture = useMemo(() => {
     const canvas = document.createElement("canvas");
@@ -632,12 +668,12 @@ export const AgentModel = memo(function AgentModel({
     ctx.fillRect(0, 0, 64, 64);
     ctx.fillStyle = "rgba(255,255,255,0.14)";
     ctx.fillRect(0, 0, 64, 10);
-    ctx.fillStyle = "rgba(196,122,84,0.18)";
+    ctx.fillStyle = "rgba(255, 120, 142, 0.35)";
     ctx.beginPath();
     ctx.arc(18, 38, 7, 0, Math.PI * 2);
     ctx.arc(46, 38, 7, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = "#d8a06e";
+    ctx.fillStyle = "rgba(220, 140, 100, 0.35)";
     ctx.fillRect(30, 28, 4, 10);
     ctx.fillRect(29, 37, 6, 2);
 
@@ -747,125 +783,119 @@ export const AgentModel = memo(function AgentModel({
         <meshBasicMaterial color="#000" transparent opacity={0.2} />
       </mesh>
       <group ref={rightLegRef} position={[-0.045, 0.1, 0]}>
-        {bottomStyle === "shorts" ? (
-          <>
-            <mesh position={[0, 0.03, 0]} castShadow>
-              <boxGeometry args={[0.07, 0.08, 0.08]} />
-              <meshStandardMaterial color={trouserColor} roughness={0.75} />
-            </mesh>
-            <mesh position={[0, -0.045, 0]} castShadow>
-              <boxGeometry args={[0.05, 0.06, 0.05]} />
-              <meshStandardMaterial color={skin} roughness={0.55} />
-            </mesh>
-          </>
-        ) : (
-          <>
-            <mesh castShadow>
-              <boxGeometry args={[0.07, 0.14, 0.08]} />
-              <meshStandardMaterial color={trouserColor} roughness={0.75} />
-            </mesh>
-            {bottomStyle === "cuffed" ? (
-              <mesh position={[0, -0.05, 0]}>
-                <boxGeometry args={[0.074, 0.022, 0.084]} />
-                <meshStandardMaterial color="#d1d5db" roughness={0.75} />
-              </mesh>
-            ) : null}
-          </>
-        )}
-        <mesh position={[0, -0.09, 0]} castShadow>
-          <boxGeometry args={[0.07, 0.05, 0.12]} />
-          <meshStandardMaterial color={shoeColor} roughness={0.75} />
+        {/* Minion denim overall pant leg */}
+        <mesh castShadow>
+          <boxGeometry args={[0.07, 0.14, 0.08]} />
+          <meshStandardMaterial color={trouserColor} roughness={0.55} />
+        </mesh>
+        {/* Minion chunky rounded black boot */}
+        <mesh position={[0, -0.09, 0.012]} castShadow>
+          <boxGeometry args={[0.074, 0.052, 0.13]} />
+          <meshStandardMaterial color={shoeColor} roughness={0.5} />
         </mesh>
       </group>
       <group ref={leftLegRef} position={[0.045, 0.1, 0]}>
-        {bottomStyle === "shorts" ? (
-          <>
-            <mesh position={[0, 0.03, 0]} castShadow>
-              <boxGeometry args={[0.07, 0.08, 0.08]} />
-              <meshStandardMaterial color={trouserColor} roughness={0.75} />
-            </mesh>
-            <mesh position={[0, -0.045, 0]} castShadow>
-              <boxGeometry args={[0.05, 0.06, 0.05]} />
-              <meshStandardMaterial color={skin} roughness={0.55} />
-            </mesh>
-          </>
-        ) : (
-          <>
-            <mesh castShadow>
-              <boxGeometry args={[0.07, 0.14, 0.08]} />
-              <meshStandardMaterial color={trouserColor} roughness={0.75} />
-            </mesh>
-            {bottomStyle === "cuffed" ? (
-              <mesh position={[0, -0.05, 0]}>
-                <boxGeometry args={[0.074, 0.022, 0.084]} />
-                <meshStandardMaterial color="#d1d5db" roughness={0.75} />
-              </mesh>
-            ) : null}
-          </>
-        )}
-        <mesh position={[0, -0.09, 0]} castShadow>
-          <boxGeometry args={[0.07, 0.05, 0.12]} />
-          <meshStandardMaterial color={shoeColor} roughness={0.75} />
+        {/* Minion denim overall pant leg */}
+        <mesh castShadow>
+          <boxGeometry args={[0.07, 0.14, 0.08]} />
+          <meshStandardMaterial color={trouserColor} roughness={0.55} />
+        </mesh>
+        {/* Minion chunky rounded black boot */}
+        <mesh position={[0, -0.09, 0.012]} castShadow>
+          <boxGeometry args={[0.074, 0.052, 0.13]} />
+          <meshStandardMaterial color={shoeColor} roughness={0.5} />
         </mesh>
       </group>
       {showBackpack ? (
         <group position={[0, 0.28, -0.08]}>
           <mesh castShadow>
             <boxGeometry args={[0.15, 0.18, 0.06]} />
-            <meshStandardMaterial color={accessoryColor} roughness={0.75} />
+            <meshStandardMaterial color={accessoryColor} roughness={0.52} />
           </mesh>
           <mesh position={[-0.06, 0.02, 0.02]}>
             <boxGeometry args={[0.018, 0.16, 0.018]} />
-            <meshStandardMaterial color="#cbd5e1" roughness={0.75} />
+            <meshStandardMaterial color="#cbd5e1" roughness={0.52} />
           </mesh>
           <mesh position={[0.06, 0.02, 0.02]}>
             <boxGeometry args={[0.018, 0.16, 0.018]} />
-            <meshStandardMaterial color="#cbd5e1" roughness={0.75} />
+            <meshStandardMaterial color="#cbd5e1" roughness={0.52} />
           </mesh>
         </group>
       ) : null}
+      {/* Minion yellow torso body */}
       <mesh position={[0, 0.28, 0]} castShadow receiveShadow>
         <boxGeometry args={[0.18, 0.2, 0.1]} />
-        <meshStandardMaterial ref={bodyMatRef} color={topColor} roughness={0.75} />
+        <meshStandardMaterial ref={bodyMatRef} color={topColor} roughness={0.38} />
       </mesh>
-      {topStyle === "hoodie" ? (
-        <>
-          <mesh position={[0, 0.35, -0.045]} castShadow>
-            <boxGeometry args={[0.17, 0.1, 0.03]} />
-            <meshStandardMaterial color={topColor} roughness={0.75} />
-          </mesh>
-          <mesh position={[0, 0.22, 0.056]}>
-            <boxGeometry args={[0.11, 0.03, 0.012]} />
-            <meshStandardMaterial color={cuffColor} roughness={0.75} />
-          </mesh>
-        </>
-      ) : null}
-      {topStyle === "jacket" ? (
-        <>
-          <mesh position={[0, 0.28, 0.056]}>
-            <boxGeometry args={[0.182, 0.21, 0.012]} />
-            <meshStandardMaterial color={topAccentColor} roughness={0.75} />
-          </mesh>
-          <mesh position={[0, 0.28, 0.063]}>
-            <boxGeometry args={[0.034, 0.2, 0.01]} />
-            <meshStandardMaterial color="#f8fafc" roughness={0.75} />
-          </mesh>
-        </>
-      ) : null}
+
+      {/* Minion denim overalls - lower body / waist */}
+      <mesh position={[0, 0.21, 0]} castShadow>
+        <boxGeometry args={[0.184, 0.07, 0.104]} />
+        <meshStandardMaterial color={MINION_DENIM} roughness={0.55} />
+      </mesh>
+
+      {/* Minion denim overalls - front bib */}
+      <mesh position={[0, 0.27, 0.053]} castShadow>
+        <boxGeometry args={[0.12, 0.11, 0.012]} />
+        <meshStandardMaterial color={MINION_DENIM} roughness={0.55} />
+      </mesh>
+
+      {/* Minion overalls chest pocket */}
+      <mesh position={[0, 0.255, 0.06]}>
+        <boxGeometry args={[0.065, 0.045, 0.005]} />
+        <meshStandardMaterial color={MINION_DENIM_DARK} roughness={0.6} />
+      </mesh>
+      {/* Gru / Minion logo badge */}
+      <mesh position={[0, 0.255, 0.064]}>
+        <circleGeometry args={[0.014, 16]} />
+        <meshBasicMaterial color="#18181b" />
+      </mesh>
+      <mesh position={[0, 0.255, 0.065]}>
+        <circleGeometry args={[0.007, 12]} />
+        <meshBasicMaterial color="#d4d4d8" />
+      </mesh>
+
+      {/* Minion denim overalls - back bib */}
+      <mesh position={[0, 0.27, -0.053]} castShadow>
+        <boxGeometry args={[0.12, 0.11, 0.012]} />
+        <meshStandardMaterial color={MINION_DENIM} roughness={0.55} />
+      </mesh>
+
+      {/* Overalls shoulder suspender straps */}
+      <mesh position={[-0.058, 0.31, 0]} rotation={[0, 0, -0.08]} castShadow>
+        <boxGeometry args={[0.024, 0.16, 0.108]} />
+        <meshStandardMaterial color={MINION_DENIM_DARK} roughness={0.55} />
+      </mesh>
+      {/* Left front metallic button */}
+      <mesh position={[-0.052, 0.305, 0.06]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.006, 0.006, 0.004, 12]} />
+        <meshStandardMaterial color="#cbd5e1" metalness={0.9} roughness={0.2} />
+      </mesh>
+
+      <mesh position={[0.058, 0.31, 0]} rotation={[0, 0, 0.08]} castShadow>
+        <boxGeometry args={[0.024, 0.16, 0.108]} />
+        <meshStandardMaterial color={MINION_DENIM_DARK} roughness={0.55} />
+      </mesh>
+      {/* Right front metallic button */}
+      <mesh position={[0.052, 0.305, 0.06]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.006, 0.006, 0.004, 12]} />
+        <meshStandardMaterial color="#cbd5e1" metalness={0.9} roughness={0.2} />
+      </mesh>
       <group ref={rightArmRef} position={[-0.12, 0.28, 0]}>
-        <mesh position={[0, -0.08, 0]} castShadow>
-          <boxGeometry args={[0.06, 0.16, 0.06]} />
-          <meshStandardMaterial color={sleeveColor} roughness={0.75} />
+        {/* Yellow bare minion arm */}
+        <mesh position={[0, -0.07, 0]} castShadow>
+          <boxGeometry args={[0.058, 0.14, 0.058]} />
+          <meshStandardMaterial color={MINION_YELLOW} roughness={0.38} />
         </mesh>
-        {topStyle === "hoodie" ? (
-          <mesh position={[0, -0.145, 0]}>
-            <boxGeometry args={[0.064, 0.03, 0.064]} />
-            <meshStandardMaterial color={cuffColor} roughness={0.75} />
-          </mesh>
-        ) : null}
-        <mesh position={[0, -0.17, 0]} castShadow>
-          <boxGeometry args={[0.05, 0.05, 0.05]} />
-          <meshStandardMaterial color={skin} roughness={0.55} />
+        {/* Black minion glove wristband/cuff */}
+        <mesh position={[0, -0.138, 0]}>
+          <boxGeometry args={[0.062, 0.025, 0.062]} />
+          <meshStandardMaterial color={MINION_GLOVE} roughness={0.6} />
+        </mesh>
+        {/* Black minion glove hand */}
+        <mesh position={[0, -0.165, 0]} castShadow>
+          <boxGeometry args={[0.052, 0.05, 0.052]} />
+          <meshStandardMaterial color={MINION_GLOVE} roughness={0.5} />
         </mesh>
         <group
           ref={heldPaddleRef}
@@ -956,33 +986,29 @@ export const AgentModel = memo(function AgentModel({
         </group>
       </group>
       <group ref={leftArmRef} position={[0.12, 0.28, 0]}>
-        <mesh position={[0, -0.08, 0]} castShadow>
-          <boxGeometry args={[0.06, 0.16, 0.06]} />
-          <meshStandardMaterial color={sleeveColor} roughness={0.75} />
+        {/* Yellow bare minion arm */}
+        <mesh position={[0, -0.07, 0]} castShadow>
+          <boxGeometry args={[0.058, 0.14, 0.058]} />
+          <meshStandardMaterial color={MINION_YELLOW} roughness={0.38} />
         </mesh>
-        {topStyle === "hoodie" ? (
-          <mesh position={[0, -0.145, 0]}>
-            <boxGeometry args={[0.064, 0.03, 0.064]} />
-            <meshStandardMaterial color={cuffColor} roughness={0.75} />
-          </mesh>
-        ) : null}
-        <mesh position={[0, -0.17, 0]} castShadow>
-          <boxGeometry args={[0.05, 0.05, 0.05]} />
-          <meshStandardMaterial color={skin} roughness={0.55} />
+        {/* Black minion glove wristband/cuff */}
+        <mesh position={[0, -0.138, 0]}>
+          <boxGeometry args={[0.062, 0.025, 0.062]} />
+          <meshStandardMaterial color={MINION_GLOVE} roughness={0.6} />
+        </mesh>
+        {/* Black minion glove hand */}
+        <mesh position={[0, -0.165, 0]} castShadow>
+          <boxGeometry args={[0.052, 0.05, 0.052]} />
+          <meshStandardMaterial color={MINION_GLOVE} roughness={0.5} />
         </mesh>
       </group>
       <mesh position={[0, 0.39, 0]}>
         <boxGeometry args={[0.07, 0.05, 0.07]} />
-        <meshStandardMaterial color={skin} roughness={0.55} />
+        <meshStandardMaterial color={skin} roughness={0.42} />
       </mesh>
       <mesh position={[0, 0.47, 0]} castShadow receiveShadow>
-        <boxGeometry args={[0.16, 0.16, 0.14]} />
-        <meshStandardMaterial attach="material-0" color={skin} roughness={0.55} />
-        <meshStandardMaterial attach="material-1" color={skin} roughness={0.55} />
-        <meshStandardMaterial attach="material-2" color={skin} roughness={0.55} />
-        <meshStandardMaterial attach="material-3" color={skin} roughness={0.55} />
-        <meshStandardMaterial attach="material-4" map={faceTexture} roughness={0.55} />
-        <meshStandardMaterial attach="material-5" color={skin} roughness={0.55} />
+        <capsuleGeometry args={[0.082, 0.05, 16, 24]} />
+        <meshStandardMaterial color={skin} roughness={0.38} />
       </mesh>
       {hairStyle === "short" ? (
         <mesh position={[0, 0.555, 0]} castShadow>
@@ -1038,18 +1064,18 @@ export const AgentModel = memo(function AgentModel({
         <>
           <mesh position={[0, 0.59, 0]} castShadow>
             <boxGeometry args={[0.172, 0.03, 0.152]} />
-            <meshStandardMaterial color={accessoryColor} roughness={0.75} />
+            <meshStandardMaterial color={accessoryColor} roughness={0.52} />
           </mesh>
           <mesh position={[0, 0.575, 0.07]}>
             <boxGeometry args={[0.09, 0.012, 0.05]} />
-            <meshStandardMaterial color={accessoryColor} roughness={0.75} />
+            <meshStandardMaterial color={accessoryColor} roughness={0.52} />
           </mesh>
         </>
       ) : null}
       {hatStyle === "beanie" ? (
         <mesh position={[0, 0.59, 0]} castShadow>
           <boxGeometry args={[0.18, 0.06, 0.16]} />
-          <meshStandardMaterial color={accessoryColor} roughness={0.75} />
+          <meshStandardMaterial color={accessoryColor} roughness={0.52} />
         </mesh>
       ) : null}
       {showHeadset ? (
@@ -1080,22 +1106,127 @@ export const AgentModel = memo(function AgentModel({
         <boxGeometry args={[0.04, 0.01, 0.01]} />
         <meshBasicMaterial color="#342016" />
       </mesh>
-      <mesh ref={leftEyeRef} position={[-0.04, 0.475, 0.072]}>
-        <boxGeometry args={[0.03, 0.03, 0.01]} />
-        <meshBasicMaterial color="#1a1a2e" />
+      {/* Minion-style dark goggle head strap (all around the head) */}
+      <mesh position={[0, 0.475, 0]}>
+        <boxGeometry args={[0.174, 0.024, 0.168]} />
+        <meshStandardMaterial color="#27272a" roughness={0.65} />
       </mesh>
-      <mesh ref={rightEyeRef} position={[0.04, 0.475, 0.072]}>
-        <boxGeometry args={[0.03, 0.03, 0.01]} />
-        <meshBasicMaterial color="#1a1a2e" />
+
+      {isOneEyed ? (
+        /* Single central goggle (like Stuart) */
+        <>
+          <mesh position={[0, 0.475, 0.08]}>
+            <torusGeometry args={[0.035, 0.006, 14, 28]} />
+            <meshStandardMaterial color="#d4d4d8" metalness={0.9} roughness={0.2} />
+          </mesh>
+          <mesh position={[-0.042, 0.475, 0.078]}>
+            <boxGeometry args={[0.012, 0.016, 0.008]} />
+            <meshStandardMaterial color="#a1a1aa" metalness={0.9} roughness={0.2} />
+          </mesh>
+          <mesh position={[0.042, 0.475, 0.078]}>
+            <boxGeometry args={[0.012, 0.016, 0.008]} />
+            <meshStandardMaterial color="#a1a1aa" metalness={0.9} roughness={0.2} />
+          </mesh>
+          <mesh position={[0, 0.475, 0.08]}>
+            <circleGeometry args={[0.034, 28]} />
+            <meshBasicMaterial color="#ffffff" />
+          </mesh>
+          <mesh ref={leftEyeRef} position={[0, 0.475, 0.082]}>
+            <circleGeometry args={[0.022, 24]} />
+            <meshBasicMaterial color="#382116" />
+          </mesh>
+          <mesh ref={leftEyeHighlightRef} position={[0.007, 0.485, 0.085]}>
+            <circleGeometry args={[0.008, 16]} />
+            <meshBasicMaterial color="#ffffff" />
+          </mesh>
+          <mesh ref={leftEyeTwinkleRef} position={[-0.008, 0.466, 0.085]}>
+            <circleGeometry args={[0.0045, 12]} />
+            <meshBasicMaterial color="#bae6fd" />
+          </mesh>
+        </>
+      ) : (
+        /* Dual goggles (like Kevin & Bob) */
+        <>
+          <mesh position={[-0.038, 0.475, 0.08]} rotation={[0, 0, 0]}>
+            <torusGeometry args={[0.025, 0.005, 12, 24]} />
+            <meshStandardMaterial color="#d4d4d8" metalness={0.88} roughness={0.25} />
+          </mesh>
+          <mesh position={[0.038, 0.475, 0.08]} rotation={[0, 0, 0]}>
+            <torusGeometry args={[0.025, 0.005, 12, 24]} />
+            <meshStandardMaterial color="#d4d4d8" metalness={0.88} roughness={0.25} />
+          </mesh>
+          <mesh position={[0, 0.475, 0.085]}>
+            <boxGeometry args={[0.014, 0.008, 0.008]} />
+            <meshStandardMaterial color="#a1a1aa" metalness={0.88} roughness={0.25} />
+          </mesh>
+          <mesh position={[-0.038, 0.475, 0.08]}>
+            <circleGeometry args={[0.024, 24]} />
+            <meshBasicMaterial color="#ffffff" />
+          </mesh>
+          <mesh position={[0.038, 0.475, 0.08]}>
+            <circleGeometry args={[0.024, 24]} />
+            <meshBasicMaterial color="#ffffff" />
+          </mesh>
+          <mesh ref={leftEyeRef} position={[-0.038, 0.475, 0.082]}>
+            <circleGeometry args={[0.016, 24]} />
+            <meshBasicMaterial color="#382116" />
+          </mesh>
+          <mesh ref={rightEyeRef} position={[0.038, 0.475, 0.082]}>
+            <circleGeometry args={[0.016, 24]} />
+            <meshBasicMaterial color="#382116" />
+          </mesh>
+          <mesh ref={leftEyeHighlightRef} position={[-0.032, 0.482, 0.085]}>
+            <circleGeometry args={[0.006, 16]} />
+            <meshBasicMaterial color="#ffffff" />
+          </mesh>
+          <mesh ref={rightEyeHighlightRef} position={[0.044, 0.482, 0.085]}>
+            <circleGeometry args={[0.006, 16]} />
+            <meshBasicMaterial color="#ffffff" />
+          </mesh>
+          <mesh ref={leftEyeTwinkleRef} position={[-0.044, 0.468, 0.085]}>
+            <circleGeometry args={[0.0035, 12]} />
+            <meshBasicMaterial color="#bae6fd" />
+          </mesh>
+          <mesh ref={rightEyeTwinkleRef} position={[0.032, 0.468, 0.085]}>
+            <circleGeometry args={[0.0035, 12]} />
+            <meshBasicMaterial color="#bae6fd" />
+          </mesh>
+        </>
+      )}
+
+      {/* Cute round rosy minion blush cheeks */}
+      <mesh ref={leftCheekRef} position={[-0.054, 0.436, 0.08]}>
+        <circleGeometry args={[0.015, 20]} />
+        <meshBasicMaterial color="#ff8ca3" transparent opacity={0.78} />
       </mesh>
-      <mesh ref={leftEyeHighlightRef} position={[-0.03, 0.482, 0.074]}>
-        <boxGeometry args={[0.008, 0.008, 0.01]} />
-        <meshBasicMaterial color="#fff" />
+      <mesh ref={rightCheekRef} position={[0.054, 0.436, 0.08]}>
+        <circleGeometry args={[0.015, 20]} />
+        <meshBasicMaterial color="#ff8ca3" transparent opacity={0.78} />
       </mesh>
-      <mesh ref={rightEyeHighlightRef} position={[0.05, 0.482, 0.074]}>
-        <boxGeometry args={[0.008, 0.008, 0.01]} />
-        <meshBasicMaterial color="#fff" />
-      </mesh>
+
+      {/* Minion sprout hair tuft on top of head */}
+      <group position={[0, 0.582, 0]}>
+        <mesh position={[0, 0.018, 0]}>
+          <cylinderGeometry args={[0.0025, 0.004, 0.032, 8]} />
+          <meshStandardMaterial color={hairColor} roughness={0.4} />
+        </mesh>
+        <mesh position={[-0.012, 0.015, 0]} rotation={[0, 0, 0.22]}>
+          <cylinderGeometry args={[0.002, 0.0035, 0.026, 8]} />
+          <meshStandardMaterial color={hairColor} roughness={0.4} />
+        </mesh>
+        <mesh position={[0.012, 0.015, 0]} rotation={[0, 0, -0.22]}>
+          <cylinderGeometry args={[0.002, 0.0035, 0.026, 8]} />
+          <meshStandardMaterial color={hairColor} roughness={0.4} />
+        </mesh>
+        <mesh position={[-0.024, 0.012, 0]} rotation={[0, 0, 0.38]}>
+          <cylinderGeometry args={[0.0018, 0.003, 0.022, 8]} />
+          <meshStandardMaterial color={hairColor} roughness={0.4} />
+        </mesh>
+        <mesh position={[0.024, 0.012, 0]} rotation={[0, 0, -0.38]}>
+          <cylinderGeometry args={[0.0018, 0.003, 0.022, 8]} />
+          <meshStandardMaterial color={hairColor} roughness={0.4} />
+        </mesh>
+      </group>
       {showGlasses ? (
         <>
           <mesh position={[-0.04, 0.475, 0.078]}>
@@ -1131,9 +1262,9 @@ export const AgentModel = memo(function AgentModel({
           </mesh>
         </>
       ) : null}
-      <mesh ref={mouthRef} position={[0, 0.436, 0.074]}>
+      <mesh ref={mouthRef} position={[0, 0.432, 0.082]}>
         <boxGeometry args={[0.05, 0.014, 0.01]} />
-        <meshBasicMaterial color="#9c4a4a" />
+        <meshBasicMaterial color="#c45869" />
       </mesh>
       <mesh
         ref={leftMouthCornerRef}
@@ -1141,7 +1272,7 @@ export const AgentModel = memo(function AgentModel({
         visible={false}
       >
         <boxGeometry args={[0.014, 0.014, 0.01]} />
-        <meshBasicMaterial color="#9c4a4a" />
+        <meshBasicMaterial color="#c45869" />
       </mesh>
       <mesh
         ref={rightMouthCornerRef}
@@ -1149,7 +1280,7 @@ export const AgentModel = memo(function AgentModel({
         visible={false}
       >
         <boxGeometry args={[0.014, 0.014, 0.01]} />
-        <meshBasicMaterial color="#9c4a4a" />
+        <meshBasicMaterial color="#c45869" />
       </mesh>
       <mesh
         ref={pulseRingRef}
@@ -1170,7 +1301,7 @@ export const AgentModel = memo(function AgentModel({
         <Billboard position={[0, nameplateHeight, 0]}>
           <mesh position={[0, 0, -0.001]}>
             <planeGeometry args={[0.82, subtitleText ? 0.34 : 0.24]} />
-            <meshBasicMaterial color="#080c14" transparent opacity={0.9} />
+            <meshBasicMaterial color="#151b28" transparent opacity={0.85} />
           </mesh>
           <mesh position={[-0.392, 0, 0]}>
             <planeGeometry args={[0.028, subtitleText ? 0.34 : 0.24]} />
@@ -1183,7 +1314,7 @@ export const AgentModel = memo(function AgentModel({
           <Text
             position={[-0.02, subtitleText ? 0.05 : 0, 0.001]}
             fontSize={nameplateFontSize}
-            color="#e8dfc0"
+            color="#fcfbfa"
             anchorX="center"
             anchorY="middle"
             maxWidth={0.68}

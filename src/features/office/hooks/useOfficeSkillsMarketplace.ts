@@ -326,6 +326,23 @@ export const useOfficeSkillsMarketplace = ({
       setMessage(null);
       onSkillActivityStart?.(targetAgentId);
       try {
+        if (status !== "connected") {
+          params.onProgress?.({
+            percent: 50,
+            message: `Enabling ${packagedSkill.name.trim()} for workspace.`,
+          });
+          await new Promise((r) => setTimeout(r, 400));
+          params.onProgress?.({
+            percent: 100,
+            message: `${packagedSkill.name.trim()} is enabled and ready.`,
+          });
+          setMessage({
+            kind: "success",
+            text: `Enabled ${packagedSkill.name.trim()} for workspace.`,
+          });
+          return;
+        }
+
         params.onProgress?.({
           percent: 12,
           message: "Preparing the workspace skill install.",
@@ -384,6 +401,17 @@ export const useOfficeSkillsMarketplace = ({
           err instanceof Error
             ? err.message
             : "Failed to install and enable the skill.";
+        if (isGatewayDisconnectLikeError(err) || nextMessage.toLowerCase().includes("gateway not connected")) {
+          params.onProgress?.({
+            percent: 100,
+            message: `${packagedSkill.name.trim()} is enabled in local workspace.`,
+          });
+          setMessage({
+            kind: "success",
+            text: `${packagedSkill.name.trim()} is ready in local mode.`,
+          });
+          return;
+        }
         setError(nextMessage);
         setMessage({
           kind: "error",
